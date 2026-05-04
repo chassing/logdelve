@@ -51,6 +51,7 @@ class StatusBar(Widget):
         self._bookmark_count: int = 0
         self._loading_loaded: int | None = None
         self._loading_total: int | None = None
+        self._suspended: bool = False
 
     def update_counts(self, total: int, filtered: int | None = None) -> None:
         """Update the line counts."""
@@ -96,6 +97,11 @@ class StatusBar(Widget):
     def set_bookmark_count(self, count: int) -> None:
         """Set bookmark count."""
         self._bookmark_count = count
+        self.refresh()
+
+    def set_suspended(self, *, suspended: bool) -> None:
+        """Set filter suspension indicator."""
+        self._suspended = suspended
         self.refresh()
 
     def set_loading_progress(self, loaded: int, total: int | None = None) -> None:
@@ -144,6 +150,10 @@ class StatusBar(Widget):
 
         if self._tailing:
             text.append(" TAIL ", style="bold reverse")
+            text.append(" ")
+
+        if self._suspended:
+            text.append(" SUSPENDED ", style="bold reverse")
             text.append(" ")
 
         if self._filtered is not None:

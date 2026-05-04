@@ -508,15 +508,19 @@ Press `!` to toggle showing only anomalous lines (requires `--baseline`). See [A
 
 ### Trace ID correlation
 
-Press `r` on a JSON log line to filter by its trace/request ID. logdelve auto-detects common ID fields (`trace_id`, `request_id`, `correlation_id`, `span_id` and their camelCase variants) and creates an include filter for the first match. This is a shortcut for manually creating a JSON key filter via `f`.
+Press `r` on a JSON log line to filter by its trace/request ID. logdelve auto-detects common ID fields (`trace_id`, `request_id`, `correlation_id`, `span_id` and their camelCase variants) and creates an include filter for the first match.
 
-If the current line is not JSON or has no recognized ID field, a notification is shown.
+Existing filters, level filter, and anomaly filter are automatically **suspended** so the full request lifecycle is visible. The status bar shows `SUSPENDED` while in trace mode. Press `x` to restore all previous filters and leave trace mode.
+
+Pressing `r` again on a different line updates the trace filter without losing the original suspended filters. If the current line is not JSON or has no recognized ID field, a notification is shown.
 
 ### Suspend / Resume
 
 Press `x` to suspend ALL active filters (rules, level, anomaly) at once. Press `x` again to restore them exactly as they were.
 
 The cursor stays on the same log line when toggling filters — the view centers on the current line.
+
+Suspended filters are preserved in auto-saved sessions — quitting while filters are suspended does not lose the original filter set.
 
 ### Filtering recipes
 

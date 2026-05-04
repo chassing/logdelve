@@ -419,6 +419,7 @@ class LogDelveApp(App[None]):  # noqa: PLR0904
         log_view = self.query_one("#log-view", LogView)
         status_bar = self.query_one("#status-bar", StatusBar)
         filter_bar = self.query_one("#filter-bar", FilterBar)
+        status_bar.set_suspended(suspended=self._filters_suspended)
         if log_view.has_filters:
             status_bar.update_counts(log_view.total_count, log_view.filtered_count)
         else:
@@ -675,14 +676,15 @@ class LogDelveApp(App[None]):  # noqa: PLR0904
         log_view = self.query_one("#log-view", LogView)
         bookmarks = log_view.get_bookmarks()
         search_patterns = log_view.search_patterns
+        filters_to_save = self._suspended_rules if self._filters_suspended else self._filter_rules
         has_data = (
-            bool(self._filter_rules) or bool(bookmarks) or not search_patterns.is_empty or bool(self._search_history)
+            bool(filters_to_save) or bool(bookmarks) or not search_patterns.is_empty or bool(self._search_history)
         )
         if not has_data:
             return
         session = create_session(
             self._session_name,
-            self._filter_rules,
+            filters_to_save,
             search_patterns=list(search_patterns.patterns),
             search_history=list(self._search_history),
         )
@@ -754,7 +756,6 @@ class LogDelveApp(App[None]):  # noqa: PLR0904
             self.notify("No JSON data on current line", severity="warning")
             return
 
-        # Find first matching trace ID key
         for key in _TRACE_ID_KEYS:
             value = line.parsed_json.get(key)
             if value is not None and isinstance(value, str) and value:
@@ -765,13 +766,22 @@ class LogDelveApp(App[None]):  # noqa: PLR0904
                     json_key=key,
                     json_value=value,
                 )
-                self._add_filter(rule)
-                # Reset level filter so the full request lifecycle is visible
-                if self._min_level is not None:
-                    self._min_level = None
-                    log_view.set_min_level(None)
-                    self._update_status_bar()
-                self.notify(f"Trace: {key}={value[:32]}...")
+                orig_idx = log_view.cursor_orig_index()
+
+                if not self._filters_suspended:
+                    self._suspended_rules = list(self._filter_rules)
+                    self._suspended_level = self._min_level
+                    self._suspended_anomaly = log_view.anomaly_filter
+                    self._filters_suspended = True
+
+                self._filter_rules = [rule]
+                self._min_level = None
+                log_view.min_level = None
+                log_view.anomaly_filter = False
+                self._apply_filters()
+                log_view.restore_cursor(orig_idx)
+                self._update_status_bar()
+                self.notify(f"Trace: {key}={value[:32]}…  (press X to restore filters)")
                 return
 
         self.notify("No trace/request ID found", severity="warning")
