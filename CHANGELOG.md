@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.4] - 2026-05-04
+
+### Fixed
+
+- **Trace ID correlation**: `r` now suspends existing filters, level filter, and anomaly filter so the full request lifecycle is visible. Press `x` to restore previous filters.
+- **Session auto-save**: Suspended filters are preserved when quitting — no more data loss when exiting during trace mode or manual filter suspension.
+
+### Added
+
+- **Suspended indicator**: Status bar shows `SUSPENDED` badge when filters are suspended.
+
 ## [0.4.3] - 2026-03-03
 
 ### Fixed
