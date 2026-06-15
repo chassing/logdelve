@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5] - 2026-06-15
+
+### Fixed
+
+- **Trace ID correlation**: `r` now finds trace/request IDs in nested JSON fields (e.g., `input.request_id`), not just top-level keys
+
 ## [0.4.4] - 2026-05-04
 
 ### Fixed

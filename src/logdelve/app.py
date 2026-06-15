@@ -756,33 +756,43 @@ class LogDelveApp(App[None]):  # noqa: PLR0904
             self.notify("No JSON data on current line", severity="warning")
             return
 
-        for key in _TRACE_ID_KEYS:
-            value = line.parsed_json.get(key)
-            if value is not None and isinstance(value, str) and value:
-                rule = FilterRule(
-                    filter_type=FilterType.INCLUDE,
-                    pattern=f"{key}={value}",
-                    is_json_key=True,
-                    json_key=key,
-                    json_value=value,
-                )
-                orig_idx = log_view.cursor_orig_index()
+        from logdelve.filters import flatten_json  # noqa: PLC0415
 
-                if not self._filters_suspended:
-                    self._suspended_rules = list(self._filter_rules)
-                    self._suspended_level = self._min_level
-                    self._suspended_anomaly = log_view.anomaly_filter
-                    self._filters_suspended = True
+        trace_key: str | None = None
+        trace_value: str | None = None
+        flat = flatten_json(line.parsed_json)
+        for flat_key, flat_val in flat:
+            leaf = flat_key.rsplit(".", 1)[-1]
+            if leaf in _TRACE_ID_KEYS and flat_val:
+                trace_key = flat_key
+                trace_value = flat_val
+                break
 
-                self._filter_rules = [rule]
-                self._min_level = None
-                log_view.min_level = None
-                log_view.anomaly_filter = False
-                self._apply_filters()
-                log_view.restore_cursor(orig_idx)
-                self._update_status_bar()
-                self.notify(f"Trace: {key}={value[:32]}…  (press X to restore filters)")
-                return
+        if trace_key is not None and trace_value is not None:
+            rule = FilterRule(
+                filter_type=FilterType.INCLUDE,
+                pattern=f"{trace_key}={trace_value}",
+                is_json_key=True,
+                json_key=trace_key,
+                json_value=trace_value,
+            )
+            orig_idx = log_view.cursor_orig_index()
+
+            if not self._filters_suspended:
+                self._suspended_rules = list(self._filter_rules)
+                self._suspended_level = self._min_level
+                self._suspended_anomaly = log_view.anomaly_filter
+                self._filters_suspended = True
+
+            self._filter_rules = [rule]
+            self._min_level = None
+            log_view.min_level = None
+            log_view.anomaly_filter = False
+            self._apply_filters()
+            log_view.restore_cursor(orig_idx)
+            self._update_status_bar()
+            self.notify(f"Trace: {trace_key}={trace_value[:32]}…  (press X to restore filters)")
+            return
 
         self.notify("No trace/request ID found", severity="warning")
 
