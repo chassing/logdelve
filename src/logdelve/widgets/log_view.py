@@ -334,6 +334,8 @@ class LogView(ScrollView, can_focus=True):  # noqa: PLR0904
         # Incremental filter check
         if self._filter_rules and not check_line(line, self._filter_rules):
             return  # Line filtered out, no display update needed
+        if not self._passes_incremental_filters(line, idx):
+            return  # Line filtered out by level/anomaly filter
 
         # Find sorted insertion position
         new_key = self._sort_key(idx)
@@ -387,10 +389,9 @@ class LogView(ScrollView, can_focus=True):  # noqa: PLR0904
         new_indices: list[int] = []
         for i, line in enumerate(lines):
             idx = base_idx + i
-            if self._filter_rules:
-                if check_line(line, self._filter_rules):
-                    new_indices.append(idx)
-            else:
+            if self._filter_rules and not check_line(line, self._filter_rules):
+                continue
+            if self._passes_incremental_filters(line, idx):
                 new_indices.append(idx)
 
         if not new_indices:
@@ -453,6 +454,15 @@ class LogView(ScrollView, can_focus=True):  # noqa: PLR0904
         """Sort key for a line index: (timestamp, original_index)."""
         ts = self._all_lines[idx].timestamp
         return (ts if ts is not None else _TIMESTAMP_MIN, idx)
+
+    def _passes_incremental_filters(self, line: LogLine, idx: int) -> bool:
+        """Check whether a newly appended line passes the level/anomaly filters."""
+        if self._min_level is not None:
+            level_order = list(LogLevel)
+            min_idx = level_order.index(self._min_level)
+            if not self._passes_level_filter(line.log_level, level_order, min_idx):
+                return False
+        return not (self._anomaly_filter and self._anomaly_scores and idx not in self._anomaly_scores)
 
     def _apply_filters(self) -> None:
         """Recompute filtered indices and update display."""
