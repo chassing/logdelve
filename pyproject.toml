@@ -1,6 +1,6 @@
 [project]
 name = "logdelve"
-version = "0.4.5"
+version = "0.4.6"
 description = "A CLI/TUI tool for viewing and filtering log lines"
 readme = "README.md"
 license = "MIT"
@@ -23,6 +23,7 @@ classifiers = [
     "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Logging",
     "Topic :: Utilities",
 ]
@@ -39,7 +40,7 @@ logdelve = "logdelve.cli:main"
 aws = ["boto3>=1.42.49"]
 
 [build-system]
-requires = ["uv_build>=0.10.2,<0.11.0"]
+requires = ["uv_build>=0.10.2,<1.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
@@ -58,7 +59,6 @@ dev = [
 [tool.ruff]
 src = ["src", "tests", "scripts"]
 line-length = 120
-target-version = "py313"
 
 [tool.ruff.lint]
 preview = true
@@ -110,7 +110,6 @@ ignore = [
 
 [tool.mypy]
 files = ["src", "tests", "scripts"]
-python_version = "3.13"
 strict = true
 enable_error_code = ["truthy-bool", "redundant-expr"]
 no_implicit_optional = true

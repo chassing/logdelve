@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.6] - 2026-08-11
+
+### Fixed
+
+- **Live tailing filters**: The minimum log-level filter and the anomaly filter now apply to lines that arrive while tailing (previously only lines loaded before the filter was set were filtered; newly streamed lines bypassed both filters)
+
+### Changed
+
+- Added a Python 3.14 classifier and widened the `uv_build` version constraint
+
 ## [0.4.5] - 2026-06-15
 
 ### Fixed
